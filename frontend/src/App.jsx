@@ -104,7 +104,7 @@ function AgriPulseLogo({size=44}){
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────
-function Sidebar({page,setPage}){
+function Sidebar({page,setPage,isOpen,onClose}){
   const nav=[
     {id:"dashboard",icon:"⊞",label:"Dashboard"},
     {id:"analyze",icon:"🔬",label:"Analyze"},
@@ -112,7 +112,7 @@ function Sidebar({page,setPage}){
     {id:"about",icon:"⬡",label:"Architecture"},
   ]
   return(
-    <div style={{
+    <div className={`sidebar ${isOpen?"open":""}`} style={{
       width:240,minHeight:"100vh",background:"#080E07",
       borderRight:"1px solid #1A2E18",display:"flex",
       flexDirection:"column",position:"fixed",top:0,left:0,zIndex:100
@@ -132,7 +132,7 @@ function Sidebar({page,setPage}){
       <nav style={{flex:1,padding:"18px 12px"}}>
         <div style={{fontSize:10,color:"#4A6A44",letterSpacing:2,textTransform:"uppercase",padding:"0 8px",marginBottom:10,fontWeight:600}}>Navigation</div>
         {nav.map(n=>(
-          <button key={n.id} onClick={()=>setPage(n.id)}
+          <button key={n.id} onClick={()=>{setPage(n.id);onClose&&onClose()}}
             style={{
               display:"flex",alignItems:"center",gap:12,width:"100%",
               padding:"11px 14px",borderRadius:10,border:"none",
@@ -242,14 +242,14 @@ function DashboardPage({history,cityWeather,loadingWeather}){
       </div>
 
       {/* Stats grid */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:28}}>
+      <div className="stats-grid" style={{marginBottom:28}}>
         <StatCard icon="🔬" value={history.length} label="Analyses Run" sub="This session" color="#3EBD5E" img={IMG.farmer}/>
         <StatCard icon="🌾" value={Object.keys(cropCounts).length||0} label="Crops Identified" sub="Unique crops" color="#C8940A" img={IMG.maize}/>
         <StatCard icon="📍" value={counties||0} label="Counties Covered" sub="Distinct locations" color="#2E86AB" img={IMG.soil}/>
         <StatCard icon="🚨" value={emergencies} label="Emergency Alerts" sub="Urgent cases" color={emergencies>0?"#E74C3C":"#3EBD5E"} img={IMG.rain}/>
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:20}}>
+      <div className="dash-grid">
         {/* LEFT: Activity feed + crop chart */}
         <div style={{display:"flex",flexDirection:"column",gap:20}}>
           {/* Crop breakdown */}
@@ -394,7 +394,7 @@ function AnalyzePage({onResult}){
   }
 
   return(
-    <div style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:24}}>
+    <div className="analyze-grid">
       {/* LEFT */}
       <div>
         {/* Input card */}
@@ -428,7 +428,7 @@ function AnalyzePage({onResult}){
             style={{width:"100%",minHeight:120,background:"#0A1508",border:"1px solid #1A2E18",borderRadius:10,padding:"15px",color:"#EBF0E8",fontSize:15,resize:"vertical",fontFamily:"DM Sans",lineHeight:1.6}}
           />
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginTop:14}}>
+          <div className="form-grid" style={{marginTop:14}}>
             <div>
               <label style={{fontSize:11,color:"#7A9274",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:7,fontWeight:600}}>📍 Your Location</label>
               <select value={location} onChange={e=>setLocation(e.target.value)}
@@ -597,7 +597,7 @@ function AnalyzePage({onResult}){
               </div>
             </div>
             <div style={{padding:"16px 20px"}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div className="weather-grid">
                 {[["💧","Humidity",`${weather.humidity}%`,"#2E86AB"],["💨","Wind",`${weather.wind_speed} km/h`,"#9B59B6"],["🌧️","Rain",`${weather.precipitation}mm`,"#3EBD5E"],["☁️","Condition",weather.condition?.split(" ").slice(0,2).join(" "),"#7A9274"]].map(([icon,label,val,col])=>(
                   <div key={label} style={{background:"#0A1508",borderRadius:10,padding:"10px 12px",border:"1px solid #1A2E18"}}>
                     <div style={{fontSize:14,marginBottom:4}}>{icon}</div>
@@ -725,6 +725,7 @@ export default function App(){
   const [history,setHistory]=useState([])
   const [cityWeather,setCityWeather]=useState({})
   const [loadingWeather,setLoadingWeather]=useState(false)
+  const [sidebarOpen,setSidebarOpen]=useState(false)
 
   // Load weather for all cities on mount
   useEffect(()=>{
@@ -760,24 +761,77 @@ export default function App(){
         ::-webkit-scrollbar-track{background:#060B05;}
         ::-webkit-scrollbar-thumb{background:#2A4A28;border-radius:4px;}
         select option{background:#0A1508;}
+
+        /* ── RESPONSIVE ── */
+        .sidebar{width:240px;transition:transform 0.3s ease;}
+        .main-content{margin-left:240px;transition:margin 0.3s ease;}
+        .hamburger{display:none;background:none;border:none;color:#EBF0E8;font-size:24px;cursor:pointer;padding:8px;}
+        .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99;}
+        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+        .dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;}
+        .analyze-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;}
+        .about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+        @media(max-width:1100px){
+          .stats-grid{grid-template-columns:repeat(2,1fr);}
+          .dash-grid{grid-template-columns:1fr;}
+          .analyze-grid{grid-template-columns:1fr;}
+          .about-grid{grid-template-columns:repeat(2,1fr);}
+        }
+
+        @media(max-width:768px){
+          .sidebar{position:fixed;top:0;left:0;z-index:100;transform:translateX(-100%);}
+          .sidebar.open{transform:translateX(0);}
+          .main-content{margin-left:0!important;}
+          .hamburger{display:block;}
+          .overlay.open{display:block;}
+          .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+          .dash-grid{grid-template-columns:1fr;}
+          .analyze-grid{grid-template-columns:1fr;}
+          .about-grid{grid-template-columns:1fr;}
+          .form-grid{grid-template-columns:1fr;}
+          .weather-grid{grid-template-columns:1fr 1fr;}
+          .main-padding{padding:16px!important;}
+          .hero-padding{padding:0 20px!important;}
+          .hero-title{font-size:28px!important;}
+          .hero-height{height:380px!important;}
+          .dash-hero-height{height:180px!important;}
+          .top-bar{padding:16px 20px!important;}
+        }
+
+        @media(max-width:480px){
+          .stats-grid{grid-template-columns:1fr 1fr;}
+          .weather-grid{grid-template-columns:1fr;}
+          .about-grid{grid-template-columns:1fr;}
+          .hero-title{font-size:22px!important;}
+          .hero-height{height:320px!important;}
+        }
       `}</style>
 
-      <Sidebar page={page} setPage={setPage}/>
+      {/* Mobile overlay */}
+      <div className={`overlay ${sidebarOpen?"open":""}`} onClick={()=>setSidebarOpen(false)}/>
+
+      <Sidebar page={page} setPage={setPage} isOpen={sidebarOpen} onClose={()=>setSidebarOpen(false)}/>
 
       {/* Main content */}
-      <div style={{marginLeft:240,flex:1,padding:"32px 36px",minHeight:"100vh",overflowY:"auto"}}>
+      <div className="main-content" style={{flex:1,padding:"32px 36px",minHeight:"100vh",overflowY:"auto"}}>
         {/* Top bar */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28,paddingBottom:20,borderBottom:"1px solid #1A2E18"}}>
-          <div>
-            <div style={{fontSize:11,color:"#4A6A44",textTransform:"uppercase",letterSpacing:2,marginBottom:4,fontWeight:600}}>
-              AgriPulse AI · {page.charAt(0).toUpperCase()+page.slice(1)}
+        <div className="top-bar" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28,paddingBottom:20,borderBottom:"1px solid #1A2E18",padding:"0 0 20px 0"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <button className="hamburger" onClick={()=>setSidebarOpen(!sidebarOpen)}>☰</button>
+            <div>
+              <div style={{fontSize:11,color:"#4A6A44",textTransform:"uppercase",letterSpacing:2,marginBottom:4,fontWeight:600}}>
+                AgriPulse AI · {page.charAt(0).toUpperCase()+page.slice(1)}
+              </div>
+              <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:700,color:"#EBF0E8"}}>
+                {page==="dashboard"&&"Overview"}
+                {page==="analyze"&&"Analyze Farm Problem"}
+                {page==="history"&&"Analysis History"}
+                {page==="about"&&"Architecture"}
+              </h1>
             </div>
-            <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:700,color:"#EBF0E8"}}>
-              {page==="dashboard"&&"Overview"}
-              {page==="analyze"&&"Analyze Farm Problem"}
-              {page==="history"&&"Analysis History"}
-              {page==="about"&&"Architecture"}
-            </h1>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,color:"#4A6A44"}}>
