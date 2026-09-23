@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 
-const API = "http://127.0.0.1:8000"
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
 // ── REAL UNSPLASH IMAGES ──────────────────────────────────────
 const IMG = {
@@ -632,7 +632,7 @@ function HistoryPage({history}){
   return(
     <div>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:"#EBF0E8",marginBottom:6}}>Analysis History</div>
-      <div style={{fontSize:13,color:"#4A6A44",marginBottom:24}}>{history.length} analyses completed this session</div>
+      <div style={{fontSize:13,color:"#4A6A44",marginBottom:24}}>{history.length} analyses on record</div>
       {history.length===0?(
         <div style={{background:"#0E1A0C",border:"1px solid #1A2E18",borderRadius:16,padding:"80px 20px",textAlign:"center"}}>
           <div style={{fontSize:52,marginBottom:16}}>🌱</div>
@@ -742,6 +742,24 @@ export default function App(){
       setLoadingWeather(false)
     }
     fetchAll()
+  },[])
+
+  // Load persisted history from the backend on mount
+  useEffect(()=>{
+    const fetchHistory=async()=>{
+      try{
+        const r=await axios.get(`${API}/history`)
+        const entries=(r.data.history||[]).map(e=>({
+          timestamp:e.timestamp,
+          crop:e.farmer?.crop,
+          location:e.farmer?.location,
+          diagnosis:e.diagnosis,
+          emergency:e.emergency
+        })).reverse()
+        setHistory(entries)
+      }catch(e){/* backend unavailable — keep session-only history */}
+    }
+    fetchHistory()
   },[])
 
   const handleResult=(entry)=>{
