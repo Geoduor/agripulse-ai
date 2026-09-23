@@ -1,24 +1,40 @@
-import requests
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+import requests
 
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-BASE_URL = "http://api.weatherapi.com/v1/current.json"
+from backend.config import load_env
+
+load_env()
+
+BASE_URL = "https://api.weatherapi.com/v1/current.json"
+REQUEST_TIMEOUT = 10
+
 
 def get_weather(location: str):
     """
     Gets real current weather for any Kenya location
     using WeatherAPI.com — accurate per city.
+    Always returns a dict with a "status" key ("success" or "error").
     """
-    try:
-        response = requests.get(BASE_URL, params={
-            "key": WEATHER_API_KEY,
-            "q": f"{location}, Kenya",
-            "aqi": "no"
-        })
+    api_key = os.getenv("WEATHER_API_KEY")
+    if not api_key:
+        return {
+            "location": location,
+            "status": "error",
+            "message": "WEATHER_API_KEY is not set in the project .env file.",
+        }
 
+    try:
+        response = requests.get(
+            BASE_URL,
+            params={
+                "key": api_key,
+                "q": f"{location}, Kenya",
+                "aqi": "no",
+            },
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
         data = response.json()
 
         # Check for API errors
@@ -26,7 +42,7 @@ def get_weather(location: str):
             return {
                 "location": location,
                 "status": "error",
-                "message": data["error"]["message"]
+                "message": data["error"]["message"],
             }
 
         current = data["current"]
@@ -47,18 +63,26 @@ def get_weather(location: str):
             "uv_index": current["uv"],
             "visibility": current["vis_km"],
             "last_updated": current["last_updated"],
-            "status": "success"
+            "status": "success",
         }
 
     except Exception as e:
         return {
             "location": location,
             "status": "error",
-            "message": str(e)
+            "message": str(e),
         }
 
 
 if __name__ == "__main__":
+    import sys
+
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     cities = ["Kisumu", "Nairobi", "Nakuru", "Eldoret", "Mombasa"]
     for city in cities:
         result = get_weather(city)

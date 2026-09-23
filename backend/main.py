@@ -11,7 +11,17 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.agents.input_parser import parse_farmer_input
 from backend.agents.reasoning_agent import analyze_and_advise
 from backend.agents.action_executor import execute_action
+from backend.config import LOG_FILE, load_env
 from backend.tools.weather_tool import get_weather
+
+load_env()
+
+# Keep emoji-rich console output from crashing on Windows consoles
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 app = FastAPI(
     title="AgriPulse AI",
@@ -19,11 +29,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow frontend to talk to backend
+# CORS: origins configurable via CORS_ORIGINS (comma-separated), defaults to open.
+# Credentials stay off: the API uses no cookies/tokens, and browsers reject
+# the wildcard-origins + credentials combination anyway.
+cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -75,7 +89,7 @@ async def analyze_farm_problem(query: FarmerQuery):
         return {
             "status": "success",
             "input_understood": parsed,
-            "weather_considered": True,
+            "weather_considered": advice.get("weather_available", True),
             "diagnosis": advice.get("diagnosis"),
             "recommendations": advice.get("recommendations"),
             "weather_impact": advice.get("weather_impact"),
@@ -92,11 +106,10 @@ async def get_farm_weather(location: str):
     """
     Get real-time weather for any Kenya farming location.
     """
-    try:
-        weather = get_weather(location)
-        return {"status": "success", "weather": weather}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    weather = get_weather(location)
+    if weather.get("status") == "error":
+        raise HTTPException(status_code=502, detail=weather.get("message", "Weather service unavailable"))
+    return {"status": "success", "weather": weather}
 
 @app.get("/history")
 def get_history():
@@ -105,8 +118,8 @@ def get_history():
     """
     try:
         history = []
-        if os.path.exists("agripulse_log.json"):
-            with open("agripulse_log.json", "r") as f:
+        if LOG_FILE.exists():
+            with open(LOG_FILE, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
                         history.append(json.loads(line))

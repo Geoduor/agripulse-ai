@@ -1,18 +1,9 @@
-import os
-from openai import OpenAI
-from dotenv import load_dotenv
 import json
 
-load_dotenv()
+from backend.agents.llm import extract_json, get_gemini_client, get_gemini_model
+from backend.config import load_env
 
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY is not set. Please add your Google AI Studio key to your .env file.")
-    return OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
+load_env()
 
 def parse_farmer_input(farmer_message: str, location: str = "Kenya"):
     """
@@ -39,9 +30,8 @@ def parse_farmer_input(farmer_message: str, location: str = "Kenya"):
     Return ONLY the JSON, no extra text.
     """
     
-    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     response = client.chat.completions.create(
-        model=model,
+        model=get_gemini_model(),
         messages=[
             {"role": "system", "content": "You are an expert agricultural assistant for Kenya. Always respond with valid JSON only."},
             {"role": "user", "content": prompt}
@@ -49,14 +39,7 @@ def parse_farmer_input(farmer_message: str, location: str = "Kenya"):
     )
     
     raw = response.choices[0].message.content.strip()
-    
-    # Clean up response in case model adds extra text
-    if "```json" in raw:
-        raw = raw.split("```json")[1].split("```")[0].strip()
-    elif "```" in raw:
-        raw = raw.split("```")[1].split("```")[0].strip()
-    
-    parsed = json.loads(raw)
+    parsed = extract_json(raw)
     return parsed
 
 

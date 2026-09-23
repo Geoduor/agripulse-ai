@@ -130,6 +130,7 @@ Create a `.env` file in the root directory:
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-3.6-flash  # Optional (defaults to gemini-3.6-flash)
 WEATHER_API_KEY=your_weatherapi_key_here
+VITE_API_URL=http://127.0.0.1:8000  # Backend URL for the Vite frontend (read from the root .env)
 ```
 
 ---

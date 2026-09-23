@@ -1,19 +1,10 @@
-import os
 import json
-from openai import OpenAI
-from dotenv import load_dotenv
+
+from backend.agents.llm import extract_json, get_gemini_client, get_gemini_model
+from backend.config import load_env
 from backend.tools.weather_tool import get_weather
 
-load_dotenv()
-
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY is not set. Please add your Google AI Studio key to your .env file.")
-    return OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
+load_env()
 
 def analyze_and_advise(parsed_input: dict):
     """
@@ -23,8 +14,24 @@ def analyze_and_advise(parsed_input: dict):
     client = get_gemini_client()
     
     # Get real weather for farmer's location
-    weather = get_weather(parsed_input.get("location", "Nairobi"))
-    
+    location = parsed_input.get("location", "Nairobi")
+    weather = get_weather(location)
+    weather_ok = weather.get("status") == "success"
+
+    if weather_ok:
+        weather_block = f"""
+    CURRENT WEATHER CONDITIONS:
+    - Temperature: {weather.get('temperature')}°C
+    - Humidity: {weather.get('humidity')}%
+    - Condition: {weather.get('condition')}
+    - Wind Speed: {weather.get('wind_speed')} km/h
+    """
+    else:
+        weather_block = """
+    CURRENT WEATHER CONDITIONS: unavailable (weather service error).
+    Base the advice on the symptoms alone.
+    """
+
     prompt = f"""
     You are AgriPulse AI, an expert agricultural advisor for Kenyan smallholder farmers.
     
@@ -34,12 +41,8 @@ def analyze_and_advise(parsed_input: dict):
     - Location: {parsed_input.get('location')}
     - Urgency: {parsed_input.get('urgency')}
     
-    CURRENT WEATHER CONDITIONS:
-    - Temperature: {weather.get('temperature')}°C
-    - Humidity: {weather.get('humidity')}%
-    - Condition: {weather.get('condition')}
-    - Wind Speed: {weather.get('wind_speed')} m/s
-    
+    {weather_block}
+
     Based on this real data, provide a JSON response with:
     {{
         "diagnosis": "what is most likely causing the problem",
@@ -74,9 +77,8 @@ def analyze_and_advise(parsed_input: dict):
     Return ONLY valid JSON. Use Kenya-specific products and pricing.
     """
     
-    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     response = client.chat.completions.create(
-        model=model,
+        model=get_gemini_model(),
         messages=[
             {"role": "system", "content": "You are an expert agricultural advisor for Kenya. Always respond with valid JSON only. Use local Kenya product names and KES pricing."},
             {"role": "user", "content": prompt}
@@ -84,13 +86,9 @@ def analyze_and_advise(parsed_input: dict):
     )
     
     raw = response.choices[0].message.content.strip()
-    
-    if "```json" in raw:
-        raw = raw.split("```json")[1].split("```")[0].strip()
-    elif "```" in raw:
-        raw = raw.split("```")[1].split("```")[0].strip()
-    
-    return json.loads(raw)
+    advice = extract_json(raw)
+    advice["weather_available"] = weather_ok
+    return advice
 
 if __name__ == "__main__":
     # Test with a parsed farmer input

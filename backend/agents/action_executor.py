@@ -1,5 +1,14 @@
 import json
+import sys
 from datetime import datetime
+
+from backend.config import LOG_FILE
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 def execute_action(advice: dict, farmer_info: dict):
     """
@@ -12,7 +21,8 @@ def execute_action(advice: dict, farmer_info: dict):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Format top recommendation as SMS
-    top_recommendation = advice["recommendations"][0]
+    recommendations = advice.get("recommendations") or []
+    top_recommendation = recommendations[0] if recommendations else {}
     
     sms_message = f"""
 AgriPulse AI Alert 🌱
@@ -35,8 +45,8 @@ Follow up in 3 days.
         "sms_sent": sms_message
     }
     
-    # Save to local log file for now
-    with open("agripulse_log.json", "a") as f:
+    # Save to local log file
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(log_entry) + "\n")
     
     print("\n✅ Action Executed:")
