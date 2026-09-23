@@ -6,16 +6,21 @@ from backend.tools.weather_tool import get_weather
 
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("DASHSCOPE_API_KEY"),
-    base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-)
+def get_gemini_client():
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY is not set. Please add your Google AI Studio key to your .env file.")
+    return OpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
 
 def analyze_and_advise(parsed_input: dict):
     """
     Takes parsed farmer input + weather data
     and returns ranked actionable recommendations.
     """
+    client = get_gemini_client()
     
     # Get real weather for farmer's location
     weather = get_weather(parsed_input.get("location", "Nairobi"))
@@ -69,8 +74,9 @@ def analyze_and_advise(parsed_input: dict):
     Return ONLY valid JSON. Use Kenya-specific products and pricing.
     """
     
+    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     response = client.chat.completions.create(
-        model="qwen3.7-plus",
+        model=model,
         messages=[
             {"role": "system", "content": "You are an expert agricultural advisor for Kenya. Always respond with valid JSON only. Use local Kenya product names and KES pricing."},
             {"role": "user", "content": prompt}

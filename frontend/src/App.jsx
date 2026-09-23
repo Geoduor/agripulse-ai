@@ -156,7 +156,7 @@ function Sidebar({page,setPage,isOpen,onClose}){
             <div style={{width:7,height:7,borderRadius:"50%",background:"#3EBD5E",animation:"pulse 2s infinite"}}/>
             <span style={{fontSize:12,color:"#3EBD5E",fontWeight:600}}>System Online</span>
           </div>
-          <div style={{fontSize:11,color:"#4A6A44"}}>Qwen Cloud · Track 4</div>
+          <div style={{fontSize:11,color:"#4A6A44"}}>Gemini 3.6 Flash · Online</div>
           <div style={{fontSize:11,color:"#4A6A44",fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>v1.0.0</div>
         </div>
       </div>
@@ -614,7 +614,7 @@ function AnalyzePage({onResult}){
         {result&&(
           <div style={{background:"#0E1A0C",border:"1px solid #1A2E18",borderRadius:16,padding:"20px 22px"}}>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,marginBottom:14,color:"#EBF0E8"}}>Query Summary</div>
-            {[["Crop",result.input_understood?.crop],["Problem",result.input_understood?.problem],["Language",result.input_understood?.language_detected],["Urgency",result.input_understood?.urgency],["Weather Used","✓ Open-Meteo"]].map(([l,v])=>(
+            {[["Crop",result.input_understood?.crop],["Problem",result.input_understood?.problem],["Language",result.input_understood?.language_detected],["Urgency",result.input_understood?.urgency],["Weather Used","✓ WeatherAPI.com"]].map(([l,v])=>(
               <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1A2E18"}}>
                 <span style={{fontSize:11,color:"#4A6A44",textTransform:"uppercase",letterSpacing:0.8}}>{l}</span>
                 <span style={{fontSize:12,color:"#EBF0E8",fontWeight:500,textTransform:"capitalize",textAlign:"right",maxWidth:160}}>{v||"—"}</span>
@@ -670,12 +670,12 @@ function HistoryPage({history}){
 // ── ABOUT PAGE ────────────────────────────────────────────────
 function AboutPage(){
   const agents=[
-    {icon:"🧠",title:"Input Parser Agent",desc:"Understands farmer messages in English, Swahili, or both. Extracts crop, problem, urgency, and location with high accuracy.",color:"#3EBD5E"},
+    {icon:"🧠",title:"Input Parser Agent",desc:"Understands farmer messages in English, Swahili, or Sheng. Extracts crop, problem, urgency, and location with high accuracy.",color:"#3EBD5E"},
     {icon:"🌤️",title:"Weather Intelligence",desc:"Fetches real-time conditions from WeatherAPI.com for every Kenya county. Temperature, humidity, wind and precipitation all factor into the AI diagnosis.",color:"#2E86AB"},
-    {icon:"🔬",title:"Reasoning Agent (Qwen3)",desc:"Core AI brain. Synthesizes symptoms + weather + Kenya agricultural context to produce precise diagnoses.",color:"#C8940A"},
+    {icon:"🔬",title:"Reasoning Agent (Gemini 3.6)",desc:"Core AI brain powered by Google Gemini 3.6 Flash. Synthesizes symptoms, weather, and Kenyan agronomy context to produce precise diagnoses.",color:"#C8940A"},
     {icon:"📋",title:"Action Executor",desc:"Converts AI analysis into a ranked 3-step action plan with Kenyan product names and KES pricing.",color:"#9B59B6"},
-    {icon:"📱",title:"SMS Notifier",desc:"Prepares formatted SMS alerts for emergency situations, ready to send via Africa's Talking API.",color:"#E74C3C"},
-    {icon:"📅",title:"Follow-Up Scheduler",desc:"Sets a 3-day follow-up checkpoint to verify treatment success and update farmer history.",color:"#3EBD5E"},
+    {icon:"📱",title:"SMS Notifier",desc:"Prepares formatted SMS alerts for emergency situations, ready to dispatch via Africa's Talking API.",color:"#E74C3C"},
+    {icon:"📅",title:"Follow-Up Scheduler",desc:"Sets a 3-day follow-up checkpoint to verify treatment success and track recovery history.",color:"#3EBD5E"},
   ]
   return(
     <div>
@@ -683,9 +683,9 @@ function AboutPage(){
         <img src={IMG.farmer} alt="Kenyan farmer" style={{width:"100%",height:"100%",objectFit:"cover",filter:"brightness(0.35)"}}/>
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",padding:"0 40px"}}>
           <div>
-            <div style={{fontSize:11,color:"#C8940A",letterSpacing:2.5,textTransform:"uppercase",marginBottom:10,fontWeight:600}}>Track 4 · Autopilot Agent · Qwen Cloud</div>
+            <div style={{fontSize:11,color:"#C8940A",letterSpacing:2.5,textTransform:"uppercase",marginBottom:10,fontWeight:600}}>Autonomous Agricultural Advisory Engine</div>
             <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:700,color:"#fff",marginBottom:8}}>How AgriPulse AI Works</h2>
-            <p style={{color:"#A8C4A4",fontSize:14,maxWidth:500}}>A 6-agent autonomous pipeline that takes a farmer's message from raw input to ranked, actionable advice in under 10 seconds.</p>
+            <p style={{color:"#A8C4A4",fontSize:14,maxWidth:500}}>A multi-agent autonomous pipeline that takes a farmer's message from raw input to ranked, actionable advice in under 10 seconds.</p>
           </div>
         </div>
       </div>
@@ -706,13 +706,13 @@ function AboutPage(){
           <span style={{color:"#EBF0E8"}}>Farmer</span> ──► <span style={{color:"#3EBD5E"}}>Input Parser</span> ──► <span style={{color:"#2E86AB"}}>WeatherAPI.com</span>{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼{"\n"}
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#C8940A"}}>Qwen3 Reasoning Agent</span>{"\n"}
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#C8940A"}}>Gemini 3.6 Flash Reasoning Agent</span>{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#9B59B6"}}>Action Executor</span> ──► <span style={{color:"#E74C3C"}}>SMS Alert</span> + <span style={{color:"#3EBD5E"}}>Ranked Advice</span>{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│{"\n"}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼{"\n"}
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#2E86AB"}}>Alibaba Cloud ECS</span> + RDS + OSS
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#2E86AB"}}>Vercel (UI)</span> + <span style={{color:"#9B59B6"}}>Render (API)</span> + <span style={{color:"#3EBD5E"}}>Supabase (DB)</span>
         </div>
       </div>
     </div>

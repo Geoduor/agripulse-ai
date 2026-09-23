@@ -1,6 +1,13 @@
+import sys
 from backend.agents.input_parser import parse_farmer_input
 from backend.agents.reasoning_agent import analyze_and_advise
 from backend.agents.action_executor import execute_action
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 def run_agripulse(farmer_message: str, location: str, phone: str):
     print(f"\n{'='*50}")
