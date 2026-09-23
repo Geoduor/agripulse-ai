@@ -48,6 +48,15 @@ Follow up in 3 days.
     # Save to local log file
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(log_entry) + "\n")
+
+    # Persist to Supabase when configured (best-effort; the JSON log above
+    # remains the fallback audit trail). Imported lazily so the app keeps
+    # running even before SQLAlchemy is installed.
+    try:
+        from backend.database.models import save_diagnosis
+        save_diagnosis(log_entry)
+    except ImportError:
+        pass
     
     print("\n✅ Action Executed:")
     print(f"📱 SMS Message Prepared:\n{sms_message}")

@@ -6,3 +6,5 @@ uvicorn[standard]>=0.32
 openai>=1.50
 requests>=2.31
 python-dotenv>=1.0
+sqlalchemy>=2.0
+psycopg[binary]>=3.2

@@ -260,7 +260,10 @@ Returns recorded diagnoses and treatment logs.
 
 ### Database on Supabase
 1. Create a project on [Supabase](https://supabase.com).
-2. Connect PostgreSQL via SQLAlchemy in `backend/database/models.py`.
+2. Open **Settings → Database** and copy the **Session pooler** connection string (URI, port 5432).
+3. Add it to your `.env` as `DATABASE_URL` (and to Render's environment variables if the backend is deployed there).
+4. Run `pip install -r requirements.txt` again (adds SQLAlchemy + psycopg).
+5. Restart the backend — tables are created automatically, new analyses are saved to Supabase, and `/history` serves from it automatically. Without `DATABASE_URL`, the app keeps using the local JSON log.
 
 ---
 

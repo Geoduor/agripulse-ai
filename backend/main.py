@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 import json
 import os
 import sys
@@ -14,6 +15,12 @@ from backend.agents.action_executor import execute_action
 from backend.config import LOG_FILE, load_env
 from backend.tools.weather_tool import get_weather
 
+try:
+    from backend.database.models import backfill_from_json, database_enabled, init_db, list_diagnoses
+    HAS_DATABASE = True
+except ImportError:
+    HAS_DATABASE = False
+
 load_env()
 
 # Keep emoji-rich console output from crashing on Windows consoles
@@ -23,10 +30,39 @@ if sys.platform == "win32":
     except Exception:
         pass
 
+def _backfill_log():
+    """Migrate existing JSON log entries into Supabase (once, when empty)."""
+    try:
+        if not LOG_FILE.exists():
+            return
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            entries = [json.loads(line) for line in f if line.strip()]
+        inserted = backfill_from_json(entries)
+        if inserted:
+            print(f"📦 Backfilled {inserted} existing log entries into Supabase")
+    except Exception as e:
+        print(f"[db] Backfill skipped: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if HAS_DATABASE:
+        if database_enabled():
+            if init_db():
+                print("✅ Supabase database connected")
+                _backfill_log()
+            else:
+                print("⚠️ Supabase init failed — history will use the JSON log")
+        else:
+            print("ℹ️ DATABASE_URL not set — history uses the local JSON log")
+    yield
+
+
 app = FastAPI(
     title="AgriPulse AI",
     description="Autonomous Agricultural Agent for Kenyan Smallholder Farmers",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS: origins configurable via CORS_ORIGINS (comma-separated), defaults to open.
@@ -114,15 +150,21 @@ async def get_farm_weather(location: str):
 @app.get("/history")
 def get_history():
     """
-    Returns logged farmer interactions.
+    Returns logged farmer interactions (Supabase when configured,
+    otherwise the local JSON audit log).
     """
     try:
+        if HAS_DATABASE and database_enabled():
+            rows = list_diagnoses()
+            if rows:
+                return {"status": "success", "count": len(rows), "history": rows, "source": "supabase"}
+
         history = []
         if LOG_FILE.exists():
             with open(LOG_FILE, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
                         history.append(json.loads(line))
-        return {"status": "success", "count": len(history), "history": history}
+        return {"status": "success", "count": len(history), "history": history, "source": "json_log"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
