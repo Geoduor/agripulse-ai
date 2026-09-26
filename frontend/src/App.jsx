@@ -59,7 +59,7 @@ function useTypewriter(text, speed=14, active=false){
       else clearInterval(t)
     },speed)
     return()=>clearInterval(t)
-  },[text,active])
+  },[text,active,speed])
   return d
 }
 
@@ -132,7 +132,7 @@ function Sidebar({page,setPage,isOpen,onClose}){
       <nav style={{flex:1,padding:"18px 12px"}}>
         <div style={{fontSize:10,color:"#4A6A44",letterSpacing:2,textTransform:"uppercase",padding:"0 8px",marginBottom:10,fontWeight:600}}>Navigation</div>
         {nav.map(n=>(
-          <button key={n.id} onClick={()=>{setPage(n.id);onClose&&onClose()}}
+          <button key={n.id} onClick={()=>{setPage(n.id);onClose?.()}}
             style={{
               display:"flex",alignItems:"center",gap:12,width:"100%",
               padding:"11px 14px",borderRadius:10,border:"none",
@@ -387,7 +387,7 @@ function AnalyzePage({onResult}){
         emergency:ar.data.emergency
       })
       setTimeout(()=>resultRef.current?.scrollIntoView({behavior:"smooth"}),400)
-    }catch(e){
+    }catch{
       setError("Cannot connect to backend. Make sure your FastAPI server is running on port 8000.")
       setAgentStep(0)
     }finally{setLoading(false)}
@@ -736,7 +736,7 @@ export default function App(){
         try{
           const r=await axios.get(`${API}/weather/${city}`)
           results[city]=r.data.weather
-        }catch(e){results[city]=null}
+        }catch{results[city]=null}
       }
       setCityWeather(results)
       setLoadingWeather(false)
@@ -757,7 +757,7 @@ export default function App(){
           emergency:e.emergency
         })).reverse()
         setHistory(entries)
-      }catch(e){/* backend unavailable — keep session-only history */}
+      }catch{/* backend unavailable — keep session-only history */}
     }
     fetchHistory()
   },[])

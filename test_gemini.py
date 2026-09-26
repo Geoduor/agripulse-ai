@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -9,7 +10,8 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-load_dotenv()
+# Always load from the project root .env regardless of CWD
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:

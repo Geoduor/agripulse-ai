@@ -24,10 +24,11 @@ def get_gemini_model():
     return os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
 
-def extract_json(raw: str):
+def extract_json(raw: str) -> dict:
     """Parse the JSON object out of a model response.
 
     Tolerates markdown code fences and stray text around the payload.
+    Raises ValueError when the model returns a non-dict (e.g. a bare array).
     """
     text = raw.strip()
 
@@ -37,11 +38,18 @@ def extract_json(raw: str):
         text = fence.group(1).strip()
 
     try:
-        return json.loads(text)
+        result = json.loads(text)
     except json.JSONDecodeError:
         # Fall back to the first balanced {...} block
         start = text.find("{")
         end = text.rfind("}")
         if start != -1 and end > start:
-            return json.loads(text[start:end + 1])
-        raise
+            result = json.loads(text[start:end + 1])
+        else:
+            raise
+
+    if not isinstance(result, dict):
+        raise ValueError(
+            f"Expected a JSON object from the model, got {type(result).__name__}: {str(result)[:200]}"
+        )
+    return result
